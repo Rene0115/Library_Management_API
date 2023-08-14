@@ -2,7 +2,7 @@ import express from "express";
 import pino from "pino";
 import database from "./config/db.config.js";
 import dotenv from "dotenv";
-import middleware from "./middleware/middleware.js";
+import middleware from "./middleware/middlewares.js";
 
 dotenv.config();
 
