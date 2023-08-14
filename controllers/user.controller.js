@@ -9,7 +9,7 @@ class UserController {
       firstname: req.body.firstname,
       lastname: req.body.lastname,
       email: req.body.email,
-      phoneNumber: req.body.phoneNumber,
+      phoneNumber: parseInt(req.body.phoneNumber),
       password: bcrypt.hashSync(req.body.password, 10)
     };
     for (const property in data) {
