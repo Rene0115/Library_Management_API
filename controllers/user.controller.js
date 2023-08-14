@@ -44,61 +44,67 @@ class UserController {
       });
     }
   }
-  async login(req,res) {
+  async login(req, res) {
     try {
-        const data = {
-          email: req.body.email.toLowerCase(),
-          password: req.body.password
-        };
-        for (const property in data) {
-          if (!data[property]) {
-            return res.status(400).send({
-              success: false,
-              message: `The ${property} field is required`
-            });
-          }
-        }
-  
-        const user = await userServices.findByEmail(data.email);
-        if (!user) {
-            return res.status(404).send({
-                success: false,
-                message: `User with this email does not exist`
-            })
-        }
-  
-        const verifyPassword = bcrypt.compareSync(data.password, user.password);
-        if (!verifyPassword) {
-          return res.status(404).send({
+      const data = {
+        email: req.body.email.toLowerCase(),
+        password: req.body.password
+      };
+      for (const property in data) {
+        if (!data[property]) {
+          return res.status(400).send({
             success: false,
-            message: "email or password is invalid"
+            message: `The ${property} field is required`
           });
         }
-        const token = jwt.sign(
-          {
-            _id: user._id,
-            firstname: user.firstname,
-            email: user.email,
-            lastname: user.lastname
-          },
-          process.env.TOKEN_SECRET,
-          { expiresIn: "24h", algorithm: "HS512" }
-        );
-        return res.status(200).send({
-          success: true,
-          body: {
-            message: "user logged in successfully",
-            token,
-            data: user
-          }
-        });
-      } catch (err) {
-        logger.error(err);
-        return res.status(200).send({
+      }
+
+      const user = await userServices.findByEmail(data.email);
+      if (!user) {
+        return res.status(404).send({
           success: false,
-          error: err.message
+          message: `User with this email does not exist`
         });
       }
+
+      const verifyPassword = bcrypt.compareSync(data.password, user.password);
+      if (!verifyPassword) {
+        return res.status(404).send({
+          success: false,
+          message: "email or password is invalid"
+        });
+      }
+      const token = jwt.sign(
+        {
+          _id: user._id,
+          firstname: user.firstname,
+          email: user.email,
+          lastname: user.lastname
+        },
+        process.env.TOKEN_SECRET,
+        { expiresIn: "24h", algorithm: "HS512" }
+      );
+      return res.status(200).send({
+        success: true,
+        body: {
+          message: "user logged in successfully",
+          token,
+          data: {
+            email: user.email,
+            firstname: user.firstname,
+            lastname: user.lastname,
+            profile_photo: user.image,
+            number: user.phoneNumber
+          }
+        }
+      });
+    } catch (err) {
+      logger.error(err);
+      return res.status(200).send({
+        success: false,
+        error: err.message
+      });
+    }
   }
 }
 
