@@ -30,7 +30,7 @@ const borrowSchema = new mongoose.Schema(
 );
 
 // Virtual property to format borrowDate as a string
-borrowSchema.virtual("formattedBorrowDate").get(function() {
+borrowSchema.virtual("formattedBorrowDate").get(function () {
   return moment(this.borrowDate).tz("Africa/Lagos").format("LL");
 });
 
@@ -38,4 +38,4 @@ borrowSchema.virtual("formattedBorrowDate").get(function() {
 borrowSchema.virtual("formattedReturnDate").get(function () {
   return moment(this.returnDate).tz("Africa/Lagos").format("LL");
 });
-export const borrowModel = mongoose.model("Borrowed", borrowSchema);
+export const borrowModel = mongoose.model("Borrowers", borrowSchema);
