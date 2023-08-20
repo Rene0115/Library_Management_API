@@ -7,6 +7,8 @@ class BookController {
     const data = {
       title: req.body.title,
       author: req.body.author,
+      genre: req.body.genre,
+      description: req.body.description,
       availableCopies: req.body.availableCopies
     };
     for (const property in data) {
@@ -42,10 +44,10 @@ class BookController {
 
     const bookExists = await bookServices.findById(data.bookId);
     if (!bookExists) {
-        return res.status(400).send({
-            success: false,
-            message: " Book not found"
-        })
+      return res.status(400).send({
+        success: false,
+        message: " Book not found"
+      });
     }
 
     const borrow = await borrowModel.create(data);
@@ -53,6 +55,43 @@ class BookController {
       success: true,
       message: `The book has been borrowed by ${borrow.name}`
     });
+  }
+
+  async getBooks(req, res) {
+    const data = {
+      title: req.query.title,
+      author: req.query.author,
+      genre: req.query.genre
+    };
+    const books = await bookServices.getAllBooks(
+      data.author,
+      data.title,
+      data.genre
+    );
+    if (books.length < 1) {
+      return res.status(404).send({
+        success: true,
+        message: "No books found"
+      });
+    }
+    return res.status(200).send({
+      success: true,
+      data: books
+    });
+  }
+
+  async getAllBorrowedBooks(req, res) {
+    const books = await bookServices.getAllBorrowedBooks();
+    if (books.length < 1) {
+      return res.status(404).send({
+        success: true,
+        message: "No books found"
+      });
+    }
+    return res.status(200).send({
+      success: true,
+      data: books
+    })
   }
 }
 export default new BookController();
