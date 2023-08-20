@@ -91,7 +91,7 @@ class BookController {
     return res.status(200).send({
       success: true,
       data: books
-    })
+    });
   }
 }
 export default new BookController();

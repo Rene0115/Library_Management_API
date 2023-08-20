@@ -12,27 +12,29 @@ class BookService {
   }
 
   async getAllBooks(author, title, genre) {
-    const query = {}
-  if (author !== author){
-    query.author = author
-  }
-  if (title !== undefined){
-    query.title = title
-  }
-  if (genre !== undefined){
-    query.genre = genre
-  }
-  console.log(query);
+    const query = {};
+    if (author !== author) {
+      query.author = author;
+    }
+    if (title !== undefined) {
+      query.title = title;
+    }
+    if (genre !== undefined) {
+      query.genre = genre;
+    }
+
     const books = await bookModel.find(query);
     return books;
   }
 
   async getAllBorrowedBooks() {
-    const borrowedBooks = await borrowModel.find(); 
+    const borrowedBooks = await borrowModel.find();
     const bookIds = borrowedBooks.map((borrowedBook) => borrowedBook.bookId);
-    const booksPromises = bookIds.map(async (id) => bookModel.findOne({ _id: id }));
+    const booksPromises = bookIds.map(async (id) =>
+      bookModel.findOne({ _id: id })
+    );
     const books = await Promise.all(booksPromises);
-    return books
+    return books;
   }
 }
 
