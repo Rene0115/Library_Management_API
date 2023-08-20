@@ -11,6 +11,7 @@ middleware(app);
 
 export const logger = pino();
 
+
 const start = (port) => {
   database();
   app.listen(port, () => {

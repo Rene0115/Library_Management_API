@@ -7,10 +7,9 @@ import jwt from "jsonwebtoken";
 class UserController {
   async signup(req, res) {
     const data = {
-      firstname: req.body.firstname,
-      lastname: req.body.lastname,
+      libraryName: req.body.libraryName,
       email: req.body.email.toLowerCase(),
-      phoneNumber: parseInt(req.body.phoneNumber),
+      phoneNumber: req.body.phoneNumber,
       password: bcrypt.hashSync(req.body.password, 10)
     };
     for (const property in data) {
@@ -36,9 +35,7 @@ class UserController {
         message: `User created`,
         data: {
           email: user.email,
-          firstname: user.firstname,
-          lastname: user.lastname,
-          profile_photo: user.image,
+          library: user.libraryName,
           number: user.phoneNumber
         }
       });
@@ -77,9 +74,8 @@ class UserController {
       const token = jwt.sign(
         {
           _id: user._id,
-          firstname: user.firstname,
+          libraryName: user.libraryName,
           email: user.email,
-          lastname: user.lastname
         },
         process.env.TOKEN_SECRET,
         { expiresIn: "24h", algorithm: "HS512" }
@@ -91,8 +87,7 @@ class UserController {
           token,
           data: {
             email: user.email,
-            firstname: user.firstname,
-            lastname: user.lastname,
+            library: user.libraryName,
             profile_photo: user.image,
             number: user.phoneNumber
           }
@@ -105,6 +100,19 @@ class UserController {
         error: err.message
       });
     }
+  }
+  async getUsers(req, res) {
+    const users = await userServices.getallUsers();
+    if (users.length < 1) {
+      return res.status(404).send({
+        success: false,
+        message: "No users found"
+      });
+    }
+    return res.status(200).send({
+      success: true,
+      users: users
+    });
   }
 }
 

@@ -12,11 +12,7 @@ const userSchema = new mongoose.Schema(
       required: true,
       type: String
     },
-    firstname: {
-      required: true,
-      type: String
-    },
-    lastname: {
+    libraryName: {
       required: true,
       type: String
     },
@@ -43,7 +39,7 @@ userSchema.methods.generateToken = function t() {
       email: this.email
     },
     process.env.TOKEN_SECRET,
-    { expiresIn: "20 mins" }
+    { expiresIn: "24h" }
   );
 
   return token;
