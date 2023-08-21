@@ -41,6 +41,14 @@ class BookController {
         });
       }
     }
+    const now = moment();
+    const returnDate = moment(req.body.returnDate, "DD-MM-YYYY");
+    if (returnDate.isBefore(now)) {
+      return res.status(404).send({
+        success: false,
+        message: "Date has already passed"
+      });
+    }
 
     const bookExists = await bookServices.findById(data.bookId);
     if (!bookExists) {
@@ -49,6 +57,14 @@ class BookController {
         message: " Book not found"
       });
     }
+    if (bookExists.availableCopies < 1) {
+      return res.status(400).send({
+        success: false,
+        message: "No more copies available"
+      });
+    }
+    bookExists.availableCopies -= 1;
+    await bookExists.save();
 
     const borrow = await borrowModel.create(data);
     return res.status(201).send({
