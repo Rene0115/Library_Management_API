@@ -108,7 +108,7 @@ class BookController {
   }
   async returnBook(req, res) {
     const data = {
-      email: req.body.email,
+      email: req.body.email.toLowerCase(),
       id: req.body.id
     }
     for (const property in data) {
@@ -122,7 +122,14 @@ class BookController {
 
     const borrower = await borrowerModel.findOne({email: data.email});
     const bookId = data.id
-    borrower.books.findIndex(item=> item.id == bookId)
+    const books = borrower.books
+    const itemIndex = books.findIndex(item=> item.id == bookId)
+    books.splice(itemIndex, 1);
+    await borrower.save();
+    return res.status(200).send({
+      success: true,
+      data: borrower
+    })
   }
 
   async getBooks(req, res) {
