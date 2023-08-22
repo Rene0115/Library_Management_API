@@ -1,5 +1,6 @@
 import { bookModel } from "../models/book.model.js";
-import { borrowModel } from "../models/borrowing.model.js";
+import { borrowerModel } from "../models/borrowing.model.js";
+import mongoose from "mongoose";
 class BookService {
   async create(data) {
     const book = await bookModel.create(data);
@@ -7,7 +8,8 @@ class BookService {
   }
 
   async findById(id) {
-    const book = await bookModel.findById(id);
+    const objectId = new mongoose.Types.ObjectId(id);
+    const book = await bookModel.findById(objectId);
     return book;
   }
 
@@ -27,14 +29,41 @@ class BookService {
     return books;
   }
 
-  async getAllBorrowedBooks() {
-    const borrowedBooks = await borrowModel.find();
-    const bookIds = borrowedBooks.map((borrowedBook) => borrowedBook.bookId);
-    const booksPromises = bookIds.map(async (id) =>
+  async getBorrowedBooks(email) {
+    const borrower = await borrowerModel.findOne({ email: email });
+    console.log(borrower)
+    const bookIds = borrower.books.map((book) => book.id);
+    const bookPromises = bookIds.map(async (id) =>
       bookModel.findOne({ _id: id })
     );
-    const books = await Promise.all(booksPromises);
+    const books = await Promise.all(bookPromises);
     return books;
+  }
+
+  checkForEmptyProperty(data) {
+    let undefinedProperties = [];
+
+    if (data.name === undefined) {
+      undefinedProperties.push("name");
+    }
+
+    if (data.email === undefined) {
+      undefinedProperties.push("email");
+    }
+
+    if (data.returnDate === undefined) {
+      undefinedProperties.push("returnDate");
+    }
+
+    if (data.book[0].id === undefined) {
+      undefinedProperties.push("book id");
+    }
+
+    if (undefinedProperties.length > 0) {
+      return undefinedProperties;
+    } else {
+      return true;
+    }
   }
 }
 

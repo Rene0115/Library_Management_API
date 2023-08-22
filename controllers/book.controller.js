@@ -1,15 +1,25 @@
 import bookServices from "../services/book.services.js";
-import { borrowModel } from "../models/borrowing.model.js";
+import { borrowerModel } from "../models/borrowing.model.js";
+import { uploadImage } from "../config/cloudinary.config.js";
 import moment from "moment";
 
 class BookController {
   async create(req, res) {
+    if (!("file" in req)) {
+      return res.status(400).send({
+        success: false,
+        message: "Must add image to create book"
+      });
+    }
+    const image = await uploadImage(req.file.path);
     const data = {
       title: req.body.title,
       author: req.body.author,
       genre: req.body.genre,
       description: req.body.description,
-      availableCopies: req.body.availableCopies
+      availableCopies: req.body.availableCopies,
+      image: image.secure_url,
+      library: req.user.libraryName
     };
     for (const property in data) {
       if (!data[property]) {
@@ -30,16 +40,20 @@ class BookController {
       name: req.body.name,
       email: req.body.email.toLowerCase(),
       returnDate: moment(req.body.returnDate, "DD-MM-YYYY").toDate(),
-      bookId: req.body.bookId
+      book: [
+        {
+          id: req.body.bookId
+        }
+      ]
     };
 
-    for (const property in data) {
-      if (!data[property]) {
-        return res.status(400).send({
-          success: false,
-          message: `The ${property} field is required`
-        });
-      }
+    const properties = bookServices.checkForEmptyProperty(data);
+    if (properties !== true) {
+      const undefinedText = undefinedProperties.join(" ");
+      return res.status(400).send({
+        success: false,
+        message: `Undefined properties: ${undefinedText} do not exist.`
+      });
     }
     const now = moment();
     const returnDate = moment(req.body.returnDate, "DD-MM-YYYY");
@@ -49,12 +63,15 @@ class BookController {
         message: "Date has already passed"
       });
     }
+    const bookeId = data.book[0].id.toString();
+  
 
-    const bookExists = await bookServices.findById(data.bookId);
+    const bookExists = await bookServices.findById(req.body.bookId);
+    console.log(bookExists)
     if (!bookExists) {
       return res.status(400).send({
         success: false,
-        message: " Book not found"
+        message: "Book not found"
       });
     }
     if (bookExists.availableCopies < 1) {
@@ -65,12 +82,23 @@ class BookController {
     }
     bookExists.availableCopies -= 1;
     await bookExists.save();
-
-    const borrow = await borrowModel.create(data);
+    const borrowerExists = await borrowerModel.findOne({ email: data.email });
+    if (borrowerExists) {
+      borrowerExists.books.push({id: req.body.bookId});
+      await borrowerExists.save();
+      return res.status(200).send({
+        success: true,
+        data: borrowerExists
+      });
+    }
+    const borrow = await borrowerModel.create(data);
     return res.status(201).send({
       success: true,
       message: `The book has been borrowed by ${borrow.name}`
     });
+  }
+  async returnBook(req, res) {
+    //  const book =
   }
 
   async getBooks(req, res) {
@@ -96,8 +124,10 @@ class BookController {
     });
   }
 
-  async getAllBorrowedBooks(req, res) {
-    const books = await bookServices.getAllBorrowedBooks();
+  async getBorrowedBooks(req, res) {
+    const email = req.query.email.toLowerCase();
+    console.log(email);
+    const books = await bookServices.getBorrowedBooks(email);
     if (books.length < 1) {
       return res.status(404).send({
         success: true,

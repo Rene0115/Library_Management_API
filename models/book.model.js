@@ -21,6 +21,14 @@ const bookSchema = new mongoose.Schema(
     availableCopies: {
       type: Number,
       required: true
+    },
+    image: {
+      type: String,
+      required: true
+    },
+    library:{
+      type: String,
+      required: true
     }
   },
   { timestamps: true, versionKey: false }

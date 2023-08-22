@@ -11,12 +11,12 @@ middleware(app);
 
 export const logger = pino();
 
-
 const start = (port) => {
   database();
   app.listen(port, () => {
     logger.info("Listening on port " + port);
   });
+
 };
 const port = process.env.PORT || 4000;
 start(port);

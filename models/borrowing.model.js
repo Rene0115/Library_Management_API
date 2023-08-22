@@ -9,7 +9,8 @@ const borrowSchema = new mongoose.Schema(
     },
     email: {
       required: true,
-      type: String
+      type: String,
+      unique: true
     },
     borrowDate: {
       required: true,
@@ -20,11 +21,15 @@ const borrowSchema = new mongoose.Schema(
       required: true,
       type: Date // You need to specify a valid type here
     },
-    bookId: {
-      required: true,
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Book"
-    }
+    books: [
+      {
+        id: {
+          type: mongoose.Schema.Types.ObjectId,
+          required: true,
+          ref: 'Book'
+        }
+      }
+    ]
   },
   { timestamps: true, versionKey: false }
 );
@@ -38,4 +43,4 @@ borrowSchema.virtual("formattedBorrowDate").get(function () {
 borrowSchema.virtual("formattedReturnDate").get(function () {
   return moment(this.returnDate).tz("Africa/Lagos").format("LL");
 });
-export const borrowModel = mongoose.model("Borrowers", borrowSchema);
+export const borrowerModel = mongoose.model("Borrowers", borrowSchema);

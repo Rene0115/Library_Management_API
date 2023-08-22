@@ -2,42 +2,57 @@ import bcrypt from "bcrypt";
 import userServices from "../services/user.services.js";
 import { logger } from "../app.js";
 import _ from "lodash";
+import { uploadImage } from "../config/cloudinary.config.js";
 import jwt from "jsonwebtoken";
 
 class UserController {
   async signup(req, res) {
-    const data = {
-      libraryName: req.body.libraryName,
-      email: req.body.email.toLowerCase(),
-      phoneNumber: req.body.phoneNumber,
-      password: bcrypt.hashSync(req.body.password, 10)
-    };
-    for (const property in data) {
-      if (!data[property]) {
+    try {
+      let image = null;
+      if (req.file) {
+        image = await uploadImage(req.file.path);
+      }
+      const data = {
+        libraryName: req.body.name,
+        email: req.body.email.toLowerCase(),
+        phoneNumber: req.body.number,
+        password: bcrypt.hashSync(req.body.password, 10),
+        image: image.secure_url
+      };
+      for (const property in data) {
+        if (!data[property]) {
+          return res.status(400).send({
+            success: false,
+            message: `The ${property} field is required`
+          });
+        }
+      }
+      const exists = await userServices.findByEmail(data.email);
+      if (exists) {
         return res.status(400).send({
           success: false,
-          message: `The ${property} field is required`
+          message: `User with email ${data.email} already exists`
         });
       }
-    }
-    const exists = await userServices.findByEmail(data.email);
-    if (exists) {
-      return res.status(400).send({
-        success: false,
-        message: `User with email ${data.email} already exists`
-      });
-    }
 
-    const user = await userServices.create(data);
-    if (user) {
-      return res.status(201).send({
-        success: true,
-        message: `User created`,
-        data: {
-          email: user.email,
-          library: user.libraryName,
-          number: user.phoneNumber
-        }
+      const user = await userServices.create(data);
+      if (user) {
+        return res.status(201).send({
+          success: true,
+          message: `User created`,
+          data: {
+            email: user.email,
+            library: user.libraryName,
+            number: user.phoneNumber,
+            image: user.image
+          }
+        });
+      }
+    } catch (e) {
+      logger.error(e);
+      return res.status(500).send({
+        success: false,
+        error: e.message
       });
     }
   }
@@ -75,7 +90,7 @@ class UserController {
         {
           _id: user._id,
           libraryName: user.libraryName,
-          email: user.email,
+          email: user.email
         },
         process.env.TOKEN_SECRET,
         { expiresIn: "24h", algorithm: "HS512" }
