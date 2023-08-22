@@ -63,11 +63,8 @@ class BookController {
         message: "Date has already passed"
       });
     }
-    const bookeId = data.book[0].id.toString();
-  
 
     const bookExists = await bookServices.findById(req.body.bookId);
-    console.log(bookExists)
     if (!bookExists) {
       return res.status(400).send({
         success: false,
@@ -80,11 +77,23 @@ class BookController {
         message: "No more copies available"
       });
     }
-    bookExists.availableCopies -= 1;
-    await bookExists.save();
+
     const borrowerExists = await borrowerModel.findOne({ email: data.email });
     if (borrowerExists) {
-      borrowerExists.books.push({id: req.body.bookId});
+      const idExists = borrowerExists.books.find(
+        (ids) => ids.id == req.body.bookId
+      );
+     
+      if (idExists !== undefined) {
+        
+        return res.status(400).send({
+          success: false,
+          message: "You cant borrow a book more than once"
+        });
+      }
+      bookExists.availableCopies -= 1;
+      await bookExists.save();
+      borrowerExists.books.push({ id: req.body.bookId });
       await borrowerExists.save();
       return res.status(200).send({
         success: true,
@@ -98,7 +107,22 @@ class BookController {
     });
   }
   async returnBook(req, res) {
-    //  const book =
+    const data = {
+      email: req.body.email,
+      id: req.body.id
+    }
+    for (const property in data) {
+      if (!data[property]) {
+        return res.status(400).send({
+          success: false,
+          message: `The ${property} field is required`
+        });
+      }
+    }
+
+    const borrower = await borrowerModel.findOne({email: data.email});
+    const bookId = data.id
+    borrower.books.findIndex(item=> item.id == bookId)
   }
 
   async getBooks(req, res) {
