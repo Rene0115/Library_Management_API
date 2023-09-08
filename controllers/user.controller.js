@@ -129,6 +129,18 @@ class UserController {
       users: users
     });
   }
+
+  async findById(req, res){
+    const id = req.user._id;
+    const user = await userServices.getById(id);
+    if(!user) {
+      return res.status(404).send({
+        success: false,
+        message: `Must be logged in`
+      })
+    }
+    return res.status(200).send({success: true, data: user});
+  }
 }
 
 export default new UserController();

@@ -15,6 +15,11 @@ class UserService{
     const users = await userModel.find();
     return users;
   }
+
+  async getById (id) {
+    const user = await userModel.findById(id);
+    return user;
+  }
 }
 
 export default new UserService();
