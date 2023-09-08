@@ -17,7 +17,7 @@ class UserController {
         email: req.body.email.toLowerCase(),
         phoneNumber: req.body.number,
         password: bcrypt.hashSync(req.body.password, 10),
-        image: image.secure_url
+        image: image?.secure_url || "image"
       };
       for (const property in data) {
         if (!data[property]) {
